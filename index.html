@@ -1,0 +1,1361 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="theme-color" content="#9ACD32">
+    <title>AGRISOIL - Grow Smarter</title>
+
+    <!-- PWA Manifest -->
+    <link rel="manifest" href="manifest.json">
+
+    <!-- App Icons -->
+    <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
+    <link rel="icon" type="image/png" sizes="512x512" href="icon-512.png">
+    <link rel="apple-touch-icon" href="icon-192.png">
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700;900&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <style>
+        :root {
+            --color-primary: #9ACD32;
+            --color-secondary: #76B947;
+            --color-background: #000;
+            --color-card-bg: rgba(255, 255, 255, 0.05);
+            --color-border: #9ACD32;
+            --color-text: #FFF;
+            --color-text-dim: #CCC;
+            --color-text-dark: #999;
+            --color-danger: #F44;
+            --color-success: #9ACD32;
+            --font-family: 'Roboto', -apple-system, BlinkMacSystemFont, sans-serif;
+            --transition: all .3s cubic-bezier(.4, 0, .2, 1)
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent
+        }
+
+        html,
+        body {
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            font-family: var(--font-family);
+            background: var(--color-background);
+            color: var(--color-text)
+        }
+
+        /* ==== DECORATIVE NATURE BACKGROUND ==== */
+        .bg-decoration {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 0;
+            overflow: hidden;
+        }
+
+        /* Green wavy circles at top */
+        .wave-circle {
+            position: absolute;
+            border-radius: 50%;
+            opacity: 0.15;
+        }
+
+        .wave-1 {
+            top: -80px;
+            left: -50px;
+            width: 250px;
+            height: 250px;
+            background: radial-gradient(circle, #9ACD32, transparent 70%);
+        }
+
+        .wave-2 {
+            top: -100px;
+            right: -80px;
+            width: 300px;
+            height: 300px;
+            background: radial-gradient(circle, #76B947, transparent 65%);
+        }
+
+        .wave-3 {
+            top: 50px;
+            left: 60%;
+            width: 180px;
+            height: 180px;
+            background: radial-gradient(circle, #9ACD32, transparent 75%);
+        }
+
+        /* Tree silhouettes at bottom */
+        .tree {
+            position: absolute;
+            bottom: 0;
+        }
+
+        .tree-1 {
+            left: 5%;
+            width: 0;
+            height: 0;
+            border-left: 35px solid transparent;
+            border-right: 35px solid transparent;
+            border-bottom: 110px solid rgba(76, 124, 47, 0.3);
+        }
+
+        .tree-2 {
+            right: 8%;
+            width: 0;
+            height: 0;
+            border-left: 45px solid transparent;
+            border-right: 45px solid transparent;
+            border-bottom: 140px solid rgba(76, 124, 47, 0.25);
+        }
+
+        .tree-3 {
+            left: 25%;
+            width: 0;
+            height: 0;
+            border-left: 30px solid transparent;
+            border-right: 30px solid transparent;
+            border-bottom: 90px solid rgba(76, 124, 47, 0.35);
+        }
+
+        .tree-4 {
+            right: 35%;
+            width: 0;
+            height: 0;
+            border-left: 38px solid transparent;
+            border-right: 38px solid transparent;
+            border-bottom: 120px solid rgba(76, 124, 47, 0.28);
+        }
+
+        /* ==== END DECORATIVE BACKGROUND ==== */
+
+        .app-container {
+            width: 100%;
+            height: 100vh;
+            position: relative;
+            overflow: hidden
+        }
+
+        .view {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            transform: translateX(100%);
+            opacity: 0;
+            transition: transform .3s cubic-bezier(.4, 0, .2, 1), opacity .3s ease;
+            overflow-y: auto;
+            overflow-x: hidden;
+            -webkit-overflow-scrolling: touch;
+            padding-bottom: 80px
+        }
+
+        .view.active {
+            transform: translateX(0);
+            opacity: 1;
+            z-index: 1
+        }
+
+        .view.exiting {
+            transform: translateX(-100%);
+            opacity: 0
+        }
+
+        .background-decorations {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 0
+        }
+
+        .cloud {
+            position: absolute;
+            width: 150px;
+            animation: float 20s infinite ease-in-out
+        }
+
+        .cloud-1 {
+            top: 20px;
+            left: -20px
+        }
+
+        @keyframes float {
+
+            0%,
+            100% {
+                transform: translateY(0)
+            }
+
+            50% {
+                transform: translateY(-15px)
+            }
+        }
+
+        .header {
+            text-align: center;
+            padding: 40px 20px 20px;
+            position: relative;
+            z-index: 1
+        }
+
+        .title {
+            font-size: 2.5rem;
+            font-weight: 900;
+            letter-spacing: 4px;
+            color: var(--color-primary);
+            text-shadow: 0 0 20px rgba(154, 205, 50, .3);
+            margin-bottom: 5px
+        }
+
+        .subtitle {
+            font-size: .75rem;
+            letter-spacing: 3px;
+            color: var(--color-text-dim)
+        }
+
+        .dashboard-content {
+            padding: 0 16px 20px;
+            position: relative;
+            z-index: 1
+        }
+
+        .card {
+            background: var(--color-card-bg);
+            border: 2px solid var(--color-border);
+            border-radius: 20px;
+            padding: 20px;
+            backdrop-filter: blur(10px);
+            margin-bottom: 16px;
+            transition: var(--transition)
+        }
+
+        .card-interactive {
+            cursor: pointer;
+            position: relative
+        }
+
+        .card-interactive:active {
+            transform: scale(.98)
+        }
+
+        .card-large {
+            padding: 24px
+        }
+
+        .card-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 16px;
+            font-size: .875rem;
+            font-weight: 700;
+            letter-spacing: 1px;
+            color: var(--color-primary)
+        }
+
+        .tap-hint {
+            font-size: .7rem;
+            color: var(--color-text-dark);
+            font-weight: 400
+        }
+
+        .gauge-container {
+            position: relative;
+            width: 200px;
+            height: 200px;
+            margin: 20px auto
+        }
+
+        .circular-gauge {
+            width: 100%;
+            height: 100%;
+            transform: rotate(-90deg)
+        }
+
+        .gauge-bg {
+            fill: none;
+            stroke: rgba(255, 255, 255, .1);
+            stroke-width: 12
+        }
+
+        .gauge-progress {
+            fill: none;
+            stroke: var(--color-primary);
+            stroke-width: 12;
+            stroke-linecap: round;
+            stroke-dasharray: 502;
+            stroke-dashoffset: 502;
+            transition: stroke-dashoffset 1s ease, stroke .3s ease
+        }
+
+        .gauge-center {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            text-align: center
+        }
+
+        .gauge-value {
+            font-size: 3rem;
+            font-weight: 900;
+            color: var(--color-primary);
+            line-height: 1;
+            transition: color .3s ease
+        }
+
+        .gauge-unit {
+            font-size: 1.25rem;
+            color: var(--color-text-dim);
+            margin-top: 4px
+        }
+
+        .threshold-indicator {
+            text-align: center;
+            font-size: .875rem;
+            color: var(--color-text-dim)
+        }
+
+        #thresholdDisplay {
+            color: var(--color-primary);
+            font-weight: 700
+        }
+
+        .sensor-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            margin-bottom: 16px
+        }
+
+        .card-sensor {
+            padding: 16px
+        }
+
+        .sensor-value {
+            display: flex;
+            align-items: baseline;
+            justify-content: center;
+            gap: 6px;
+            margin: 12px 0
+        }
+
+        .sensor-value .value {
+            font-size: 2rem;
+            font-weight: 900
+        }
+
+        .sensor-value .unit {
+            font-size: 1rem;
+            color: var(--color-text-dim)
+        }
+
+        .pump-control {
+            display: flex;
+            flex-direction: column;
+            gap: 16px
+        }
+
+        .pump-status-large {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            padding: 20px;
+            background: rgba(0, 0, 0, .3);
+            border-radius: 16px
+        }
+
+        .status-indicator {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background: var(--color-text-dark);
+            position: relative;
+            transition: var(--transition)
+        }
+
+        .status-indicator.on {
+            background: var(--color-success);
+            box-shadow: 0 0 20px rgba(154, 205, 50, .6);
+            animation: pulse 2s infinite
+        }
+
+        @keyframes pulse {
+
+            0%,
+            100% {
+                opacity: 1
+            }
+
+            50% {
+                opacity: .7
+            }
+        }
+
+        .status-indicator::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 30px;
+            height: 30px;
+            background: var(--color-background);
+            border-radius: 50%
+        }
+
+        #pumpStatusText {
+            font-size: 2rem;
+            font-weight: 900;
+            letter-spacing: 2px
+        }
+
+        .btn-pump-override {
+            width: 100%;
+            background: linear-gradient(135deg, var(--color-primary), var(--color-secondary));
+            color: #000;
+            border: none;
+            border-radius: 16px;
+            padding: 18px 24px;
+            font-size: 1rem;
+            font-weight: 900;
+            letter-spacing: 1px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            transition: var(--transition);
+            box-shadow: 0 4px 16px rgba(154, 205, 50, .3)
+        }
+
+        .btn-pump-override:active {
+            transform: scale(.96);
+            box-shadow: 0 2px 8px rgba(154, 205, 50, .4)
+        }
+
+        .btn-icon {
+            font-size: 1.5rem
+        }
+
+        .tank-display {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            padding: 12px 0
+        }
+
+        .tank-visual {
+            flex: 1;
+            height: 120px;
+            background: rgba(255, 255, 255, .05);
+            border: 2px solid var(--color-border);
+            border-radius: 12px;
+            position: relative;
+            overflow: hidden
+        }
+
+        .tank-fill {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: linear-gradient(180deg, var(--color-primary), var(--color-secondary));
+            transition: height .5s ease
+        }
+
+        .tank-wave {
+            position: absolute;
+            bottom: 0;
+            left: -50%;
+            width: 200%;
+            height: 20px;
+            background: rgba(255, 255, 255, .2);
+            border-radius: 50%;
+            animation: wave 3s ease-in-out infinite
+        }
+
+        @keyframes wave {
+
+            0%,
+            100% {
+                transform: translateX(0)
+            }
+
+            50% {
+                transform: translateX(25%)
+            }
+        }
+
+        .tank-info {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            min-width: 100px
+        }
+
+        .tank-percentage {
+            font-size: 1.75rem;
+            font-weight: 900;
+            color: var(--color-primary);
+            text-align: right;
+            line-height: 1
+        }
+
+        .status-badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: .75rem;
+            font-weight: 700;
+            letter-spacing: .5px;
+            text-align: center;
+            background: rgba(255, 255, 255, .1);
+            color: var(--color-text);
+            margin-top: 4px;
+            transition: all .15s ease
+        }
+
+        .status-large {
+            padding: 8px 16px;
+            font-size: .875rem;
+            margin-top: 8px
+        }
+
+        .status-excellent {
+            background: rgba(76, 175, 80, .2);
+            color: #4CAF50;
+            border: 1px solid #4CAF50
+        }
+
+        .status-good {
+            background: rgba(154, 205, 50, .2);
+            color: var(--color-primary);
+            border: 1px solid var(--color-primary)
+        }
+
+        .status-normal {
+            background: rgba(33, 150, 243, .2);
+            color: #2196F3;
+            border: 1px solid #2196F3
+        }
+
+        .status-ideal {
+            background: rgba(154, 205, 50, .2);
+            color: var(--color-success);
+            border: 1px solid var(--color-success)
+        }
+
+        .status-healthy {
+            background: rgba(76, 175, 80, .2);
+            color: #4CAF50;
+            border: 1px solid #4CAF50
+        }
+
+        .status-low {
+            background: rgba(255, 152, 0, .2);
+            color: #F90;
+            border: 1px solid #F90
+        }
+
+        .status-critical {
+            background: rgba(244, 67, 54, .2);
+            color: #F44336;
+            border: 1px solid #F44336
+        }
+
+        .status-dry {
+            background: rgba(244, 67, 54, .2);
+            color: #F44336;
+            border: 1px solid #F44336
+        }
+
+        .status-hot {
+            background: rgba(255, 87, 34, .2);
+            color: #FF5722;
+            border: 1px solid #FF5722
+        }
+
+        .status-cold {
+            background: rgba(33, 150, 243, .2);
+            color: #2196F3;
+            border: 1px solid #2196F3
+        }
+
+        .status-humid {
+            background: rgba(33, 150, 243, .2);
+            color: #2196F3;
+            border: 1px solid #2196F3
+        }
+
+        .quick-stats {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            margin-top: 16px
+        }
+
+        .stat-item {
+            background: rgba(0, 0, 0, .3);
+            padding: 12px;
+            border-radius: 12px;
+            text-align: center
+        }
+
+        .stat-label {
+            display: block;
+            font-size: .75rem;
+            color: var(--color-text-dark);
+            margin-bottom: 6px
+        }
+
+        .stat-value {
+            display: block;
+            font-size: 1.125rem;
+            font-weight: 700;
+            color: var(--color-primary)
+        }
+
+        .view-header {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            padding: 50px 20px 20px;
+            background: rgba(0, 0, 0, .5);
+            backdrop-filter: blur(10px);
+            position: sticky;
+            top: 0;
+            z-index: 10
+        }
+
+        .btn-back {
+            background: rgba(154, 205, 50, .2);
+            border: 2px solid var(--color-primary);
+            color: var(--color-primary);
+            padding: 8px 16px;
+            border-radius: 12px;
+            font-size: 1rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all .15s ease
+        }
+
+        .btn-back:active {
+            background: var(--color-primary);
+            color: #000
+        }
+
+        .view-header h2 {
+            font-size: 1.5rem;
+            font-weight: 900;
+            color: var(--color-primary)
+        }
+
+        .history-content,
+        .settings-content {
+            padding: 20px 16px
+        }
+
+        .time-range {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 20px
+        }
+
+        .time-btn {
+            flex: 1;
+            background: rgba(255, 255, 255, .05);
+            border: 2px solid rgba(154, 205, 50, .3);
+            color: var(--color-text-dim);
+            padding: 10px;
+            border-radius: 12px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all .15s ease
+        }
+
+        .time-btn.active {
+            background: var(--color-primary);
+            color: #000;
+            border-color: var(--color-primary)
+        }
+
+        .chart-card {
+            background: var(--color-card-bg);
+            border: 2px solid var(--color-border);
+            border-radius: 20px;
+            padding: 20px;
+            margin-bottom: 20px;
+            min-height: 250px
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            margin-bottom: 20px
+        }
+
+        .stat-card {
+            background: var(--color-card-bg);
+            border: 2px solid var(--color-border);
+            border-radius: 16px;
+            padding: 16px;
+            display: flex;
+            align-items: center;
+            gap: 12px
+        }
+
+        .stat-icon {
+            font-size: 2rem
+        }
+
+        .stat-info {
+            flex: 1
+        }
+
+        .stat-title {
+            font-size: .75rem;
+            color: var(--color-text-dark);
+            margin-bottom: 4px
+        }
+
+        .stat-number {
+            font-size: 1.25rem;
+            font-weight: 900;
+            color: var(--color-primary)
+        }
+
+        .events-section h3 {
+            color: var(--color-primary);
+            font-size: 1.125rem;
+            margin-bottom: 12px
+        }
+
+        .events-list {
+            display: flex;
+            flex-direction: column;
+            gap: 8px
+        }
+
+        .event-item {
+            background: rgba(0, 0, 0, .3);
+            padding: 12px;
+            border-radius: 12px;
+            border-left: 4px solid var(--color-primary);
+            display: flex;
+            justify-content: space-between;
+            align-items: center
+        }
+
+        .event-text {
+            flex: 1;
+            font-size: .875rem
+        }
+
+        .event-time {
+            font-size: .75rem;
+            color: var(--color-text-dark)
+        }
+
+        .setting-group {
+            background: var(--color-card-bg);
+            border: 2px solid var(--color-border);
+            border-radius: 20px;
+            padding: 20px;
+            margin-bottom: 16px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center
+        }
+
+        .setting-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            flex: 1
+        }
+
+        .setting-icon {
+            font-size: 1.5rem
+        }
+
+        .setting-title {
+            font-size: .875rem;
+            font-weight: 700;
+            letter-spacing: 1px;
+            color: var(--color-primary)
+        }
+
+        .setting-subtitle {
+            font-size: .75rem;
+            color: var(--color-text-dark);
+            margin-top: 4px
+        }
+
+        .toggle-switch {
+            position: relative;
+            width: 60px;
+            height: 30px;
+            cursor: pointer
+        }
+
+        .toggle-switch input {
+            opacity: 0;
+            width: 0;
+            height: 0
+        }
+
+        .toggle-slider {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: rgba(255, 255, 255, .2);
+            border-radius: 30px;
+            transition: var(--transition)
+        }
+
+        .toggle-slider::before {
+            content: '';
+            position: absolute;
+            height: 22px;
+            width: 22px;
+            left: 4px;
+            bottom: 4px;
+            background-color: #fff;
+            border-radius: 50%;
+            transition: var(--transition)
+        }
+
+        .toggle-switch input:checked+.toggle-slider {
+            background-color: var(--color-primary)
+        }
+
+        .toggle-switch input:checked+.toggle-slider::before {
+            transform: translateX(30px)
+        }
+
+        .slider-container {
+            width: 100%
+        }
+
+        .threshold-slider {
+            width: 100%;
+            -webkit-appearance: none;
+            appearance: none;
+            height: 8px;
+            background: rgba(255, 255, 255, .1);
+            border-radius: 4px;
+            outline: none;
+            margin: 16px 0
+        }
+
+        .threshold-slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 28px;
+            height: 28px;
+            background: var(--color-primary);
+            border-radius: 50%;
+            cursor: pointer;
+            box-shadow: 0 2px 8px rgba(154, 205, 50, .4)
+        }
+
+        .threshold-slider::-moz-range-thumb {
+            width: 28px;
+            height: 28px;
+            background: var(--color-primary);
+            border-radius: 50%;
+            cursor: pointer;
+            border: none;
+            box-shadow: 0 2px 8px rgba(154, 205, 50, .4)
+        }
+
+        .slider-labels {
+            display: flex;
+            justify-content: space-between;
+            font-size: .75rem;
+            color: var(--color-text-dark)
+        }
+
+        .slider-value-large {
+            font-size: 1.25rem;
+            font-weight: 900;
+            color: var(--color-primary)
+        }
+
+        .setting-select {
+            background: rgba(0, 0, 0, .5);
+            border: 2px solid var(--color-primary);
+            color: var(--color-text);
+            padding: 10px 16px;
+            border-radius: 12px;
+            font-size: 1rem;
+            font-weight: 700;
+            cursor: pointer;
+            min-width: 140px
+        }
+
+        .info-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            width: 100%
+        }
+
+        .info-item {
+            display: flex;
+            flex-direction: column;
+            gap: 6px
+        }
+
+        .info-label {
+            font-size: .75rem;
+            color: var(--color-text-dark)
+        }
+
+        .info-value {
+            font-size: .875rem;
+            font-weight: 700;
+            color: var(--color-primary)
+        }
+
+        .wifi-bars {
+            display: flex;
+            align-items: flex-end;
+            gap: 3px;
+            height: 20px
+        }
+
+        .wifi-bars .bar {
+            width: 6px;
+            background: var(--color-text-dark);
+            border-radius: 2px
+        }
+
+        .wifi-bars .bar:nth-child(1) {
+            height: 25%
+        }
+
+        .wifi-bars .bar:nth-child(2) {
+            height: 50%
+        }
+
+        .wifi-bars .bar:nth-child(3) {
+            height: 75%
+        }
+
+        .wifi-bars .bar:nth-child(4) {
+            height: 100%
+        }
+
+        .btn-emergency {
+            width: 100%;
+            background: var(--color-danger);
+            color: #fff;
+            border: none;
+            border-radius: 16px;
+            padding: 18px 24px;
+            font-size: 1rem;
+            font-weight: 900;
+            letter-spacing: 2px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            transition: var(--transition);
+            box-shadow: 0 4px 16px rgba(255, 68, 68, .3)
+        }
+
+        .btn-emergency:active {
+            background: #C00;
+            transform: scale(.96)
+        }
+
+        .bottom-nav {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 70px;
+            background: rgba(0, 0, 0, .95);
+            backdrop-filter: blur(20px);
+            border-top: 2px solid var(--color-border);
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            z-index: 100;
+            padding-bottom: env(safe-area-inset-bottom)
+        }
+
+        .nav-btn {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 4px;
+            background: 0 0;
+            border: none;
+            color: var(--color-text-dark);
+            cursor: pointer;
+            padding: 8px;
+            transition: all .15s ease
+        }
+
+        .nav-btn.active {
+            color: var(--color-primary)
+        }
+
+        .nav-btn:active {
+            transform: scale(.9)
+        }
+
+        .nav-icon {
+            font-size: 1.5rem
+        }
+
+        .nav-label {
+            font-size: .7rem;
+            font-weight: 700;
+            letter-spacing: .5px
+        }
+
+        .toast {
+            position: fixed;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%) translateY(-100px);
+            background: var(--color-primary);
+            color: #000;
+            padding: 16px 24px;
+            border-radius: 16px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-weight: 700;
+            box-shadow: 0 8px 24px rgba(154, 205, 50, .4);
+            z-index: 1000;
+            opacity: 0;
+            transition: var(--transition)
+        }
+
+        .toast.show {
+            transform: translateX(-50%) translateY(0);
+            opacity: 1
+        }
+
+        .toast-icon {
+            font-size: 1.5rem
+        }
+
+        .loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, .9);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            gap: 20px;
+            z-index: 9999;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity .3s ease
+        }
+
+        .loading-overlay.show {
+            opacity: 1;
+            pointer-events: all
+        }
+
+        .loading-spinner {
+            width: 50px;
+            height: 50px;
+            border: 4px solid rgba(154, 205, 50, .2);
+            border-top-color: var(--color-primary);
+            border-radius: 50%;
+            animation: spin 1s linear infinite
+        }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg)
+            }
+        }
+
+        .loading-overlay p {
+            color: var(--color-text);
+            font-size: 1.125rem;
+            font-weight: 700
+        }
+
+        @media (min-width:768px) {
+            .app-container {
+                max-width: 480px;
+                margin: 0 auto;
+                box-shadow: 0 0 50px rgba(0, 0, 0, .5)
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <!-- Decorative Nature Background -->
+    <div class="bg-decoration">
+        <!-- Green wavy shapes at top -->
+        <div class="wave-circle wave-1"></div>
+        <div class="wave-circle wave-2"></div>
+        <div class="wave-circle wave-3"></div>
+
+        <!-- Tree silhouettes at bottom -->
+        <div class="tree tree-1"></div>
+        <div class="tree tree-2"></div>
+        <div class="tree tree-3"></div>
+        <div class="tree tree-4"></div>
+    </div>
+    <!-- End Decorations -->
+    <div class="app-container">
+        <!-- Dashboard View -->
+        <div class="view active" id="dashboardView">
+            <div class="background-decorations">
+                <svg class="cloud cloud-1" viewBox="0 0 200 100">
+                    <ellipse cx="50" cy="60" rx="50" ry="35" fill="#9ACD32" opacity="0.4" />
+                    <ellipse cx="90" cy="50" rx="60" ry="40" fill="#76B947" opacity="0.5" />
+                    <ellipse cx="140" cy="60" rx="50" ry="35" fill="#9ACD32" opacity="0.4" />
+                </svg>
+            </div>
+            <header class="header">
+                <h1 class="title">SOIL MATES</h1>
+                <p class="subtitle">MONITORING DEVICE</p>
+            </header>
+            <main class="dashboard-content">
+                <div class="card card-large card-interactive" data-view="historyView" data-type="soil">
+                    <div class="card-header"><span>🌱 SOIL MOISTURE</span><span class="tap-hint">Tap for history</span>
+                    </div>
+                    <div class="gauge-container">
+                        <svg class="circular-gauge" viewBox="0 0 200 200">
+                            <circle class="gauge-bg" cx="100" cy="100" r="80" />
+                            <circle class="gauge-progress" cx="100" cy="100" r="80" id="soilGauge" />
+                        </svg>
+                        <div class="gauge-center">
+                            <div class="gauge-value" id="soilValue">54.0</div>
+                            <div class="gauge-unit">%</div>
+                        </div>
+                    </div>
+                    <div class="threshold-indicator">Threshold: <span id="thresholdDisplay">30%</span></div>
+                    <div class="status-badge status-large" id="soilStatus">Healthy</div>
+                </div>
+                <div class="sensor-grid">
+                    <div class="card card-sensor card-interactive" data-view="historyView" data-type="temperature">
+                        <div class="card-header"><span>🌡️ TEMP</span></div>
+                        <div class="sensor-value"><span class="value" id="tempValue">29.2</span><span
+                                class="unit">°C</span></div>
+                        <div class="status-badge" id="tempStatus">Ideal</div>
+                    </div>
+                    <div class="card card-sensor card-interactive" data-view="historyView" data-type="humidity">
+                        <div class="card-header"><span>💧 HUMID</span></div>
+                        <div class="sensor-value"><span class="value" id="humidityValue">68.8</span><span
+                                class="unit">%</span></div>
+                        <div class="status-badge" id="humidityStatus">Normal</div>
+                    </div>
+                </div>
+                <div class="card">
+                    <div class="card-header"><span>💦 IRRIGATION PUMP</span></div>
+                    <div class="pump-control">
+                        <div class="pump-status-large">
+                            <div class="status-indicator" id="pumpIndicator"></div><span id="pumpStatusText">OFF</span>
+                        </div>
+                        <button class="btn-pump-override" id="manualOverrideBtn"><span class="btn-icon">🔧</span><span
+                                class="btn-text">MANUAL OVERRIDE</span></button>
+                    </div>
+                </div>
+                <div class="card card-interactive" data-view="historyView" data-type="water">
+                    <div class="card-header"><span>🚰 WATER TANK</span><span class="tap-hint">Tap for details</span>
+                    </div>
+                    <div class="tank-display">
+                        <div class="tank-visual">
+                            <div class="tank-fill" id="tankFill" style="height:80%"></div>
+                            <div class="tank-wave"></div>
+                        </div>
+                        <div class="tank-info">
+                            <div class="tank-percentage" id="tankValue">80% left</div>
+                            <div class="status-badge" id="waterStatus">Excellent</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="quick-stats">
+                    <div class="stat-item"><span class="stat-label">Auto Mode</span><span class="stat-value"
+                            id="autoStatus">ON</span></div>
+                    <div class="stat-item"><span class="stat-label">Last Watering</span><span class="stat-value"
+                            id="lastWatering">Never</span></div>
+                </div>
+            </main>
+        </div>
+        <!-- History View -->
+        <div class="view" id="historyView">
+            <header class="view-header"><button class="btn-back" onclick="switchView('dashboardView')">← Back</button>
+                <h2 id="historyTitle">History</h2>
+            </header>
+            <main class="history-content">
+                <div class="time-range">
+                    <button class="time-btn active" data-range="1h">1H</button>
+                    <button class="time-btn" data-range="6h">6H</button>
+                    <button class="time-btn" data-range="24h">24H</button>
+                    <button class="time-btn" data-range="7d">7D</button>
+                </div>
+                <div class="chart-card"><canvas id="historyChart"></canvas></div>
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-icon">📈</div>
+                        <div class="stat-info">
+                            <div class="stat-title">Average</div>
+                            <div class="stat-number" id="statAverage">--</div>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon">⬆️</div>
+                        <div class="stat-info">
+                            <div class="stat-title">Maximum</div>
+                            <div class="stat-number" id="statMax">--</div>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon">⬇️</div>
+                        <div class="stat-info">
+                            <div class="stat-title">Minimum</div>
+                            <div class="stat-number" id="statMin">--</div>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon">🔄</div>
+                        <div class="stat-info">
+                            <div class="stat-title">Readings</div>
+                            <div class="stat-number" id="statCount">--</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="events-section">
+                    <h3>Recent Events</h3>
+                    <div class="events-list" id="eventsList"></div>
+                </div>
+            </main>
+        </div>
+        <!-- Settings View -->
+        <div class="view" id="settingsView">
+            <header class="view-header"><button class="btn-back" onclick="switchView('dashboardView')">← Back</button>
+                <h2>Settings</h2>
+            </header>
+            <main class="settings-content">
+                <div class="setting-group">
+                    <div class="setting-header"><span class="setting-icon">🤖</span><span class="setting-title">AUTO
+                            IRRIGATION</span></div>
+                    <label class="toggle-switch"><input type="checkbox" id="autoToggle" checked><span
+                            class="toggle-slider"></span></label>
+                </div>
+                <div class="setting-group">
+                    <div class="setting-header"><span class="setting-icon">🎚️</span>
+                        <div>
+                            <div class="setting-title">MOISTURE THRESHOLD</div>
+                            <div class="setting-subtitle">Trigger watering when below</div>
+                        </div>
+                    </div>
+                    <div class="slider-container">
+                        <input type="range" id="thresholdSlider" min="10" max="90" value="30" class="threshold-slider">
+                        <div class="slider-labels"><span>Dry (10%)</span><span class="slider-value-large"
+                                id="sliderValue">30%</span><span>Wet (90%)</span></div>
+                    </div>
+                </div>
+                <div class="setting-group">
+                    <div class="setting-header"><span class="setting-icon">⏱️</span>
+                        <div>
+                            <div class="setting-title">PUMP DURATION</div>
+                            <div class="setting-subtitle">How long to water</div>
+                        </div>
+                    </div>
+                    <select id="pumpDuration" class="setting-select">
+                        <option value="5">5 seconds</option>
+                        <option value="10" selected>10 seconds</option>
+                        <option value="15">15 seconds</option>
+                        <option value="20">20 seconds</option>
+                        <option value="30">30 seconds</option>
+                    </select>
+                </div>
+                <div class="setting-group">
+                    <div class="setting-header"><span class="setting-icon">ℹ️</span><span class="setting-title">SYSTEM
+                            INFO</span></div>
+                    <div class="info-grid">
+                        <div class="info-item"><span class="info-label">WiFi:</span><span class="info-value"
+                                id="wifiStatus">Connected</span></div>
+                        <div class="info-item"><span class="info-label">Signal:</span>
+                            <div class="wifi-bars" id="wifiSignal">
+                                <div class="bar"></div>
+                                <div class="bar"></div>
+                                <div class="bar"></div>
+                                <div class="bar"></div>
+                            </div>
+                        </div>
+                        <div class="info-item"><span class="info-label">Uptime:</span><span class="info-value"
+                                id="uptime">0d 0h 0m</span></div>
+                        <div class="info-item"><span class="info-label">IP:</span><span class="info-value"
+                                id="ipAddress">192.168.4.1</span></div>
+                    </div>
+                </div>
+                <div class="setting-group"><button class="btn-emergency" id="emergencyBtn"><span
+                            class="btn-icon">🛑</span><span class="btn-text">EMERGENCY STOP</span></button></div>
+            </main>
+        </div>
+        <!-- Bottom Nav -->
+        <nav class="bottom-nav">
+            <button class="nav-btn active" data-view="dashboardView"><span class="nav-icon">🏠</span><span
+                    class="nav-label">Dashboard</span></button>
+            <button class="nav-btn" data-view="historyView" data-type="soil"><span class="nav-icon">📊</span><span
+                    class="nav-label">History</span></button>
+            <button class="nav-btn" data-view="settingsView"><span class="nav-icon">⚙️</span><span
+                    class="nav-label">Settings</span></button>
+        </nav>
+        <div class="toast" id="toast"><span class="toast-icon">ℹ️</span><span class="toast-message"
+                id="toastMessage"></span></div>
+        <div class="loading-overlay" id="loadingOverlay">
+            <div class="loading-spinner"></div>
+            <p>Connecting...</p>
+        </div>
+    </div>
+    <script>
+        const state = { soilMoisture: 54, temperature: 29.2, humidity: 68.8, waterLevel: 80, pumpStatus: !1, autoMode: !0, threshold: 30, wifiSignal: 85, connected: !1, lastUpdate: Date.now(), lastWatering: null, uptime: 0 }; const history = { soil: [], temperature: [], humidity: [], waterLevel: [], events: [] }; let currentView = 'dashboardView', currentHistoryType = 'soil', currentTimeRange = '1h', chart = null; const ESP32_IP = window.location.hostname || '192.168.4.1'; let websocket = null; document.addEventListener('DOMContentLoaded', () => { initializeApp(); setupEventListeners(); initializeWebSocket(); startDataCollection(); startDemoMode() }); function initializeApp() { console.log('🌱 SOIL MATES - Initializing...'); updateUI(); updateSystemInfo(); setInterval(updateSystemInfo, 1e3) } function switchView(viewId, historyType = null) { const currentViewEl = document.querySelector('.view.active'), newViewEl = document.getElementById(viewId); if (!newViewEl || currentViewEl === newViewEl) return; currentViewEl.classList.add('exiting'); setTimeout(() => { currentViewEl.classList.remove('active', 'exiting'); newViewEl.classList.add('active'); currentView = viewId; document.querySelectorAll('.nav-btn').forEach(btn => { btn.classList.toggle('active', btn.dataset.view === viewId) }); if (viewId === 'historyView') { currentHistoryType = historyType || 'soil'; loadHistoryView() } }, 150) } function setupEventListeners() { document.querySelectorAll('.nav-btn').forEach(btn => { btn.addEventListener('click', () => { switchView(btn.dataset.view, btn.dataset.type) }) }); document.querySelectorAll('.card-interactive').forEach(card => { card.addEventListener('click', () => { const view = card.dataset.view, type = card.dataset.type; if (view) switchView(view, type) }) }); document.getElementById('manualOverrideBtn').addEventListener('click', e => { e.stopPropagation(); togglePump() }); document.getElementById('autoToggle').addEventListener('change', e => { state.autoMode = e.target.checked; updateUI(); showToast(state.autoMode ? '🤖 Auto mode enabled' : '👤 Manual mode enabled') }); const thresholdSlider = document.getElementById('thresholdSlider'); thresholdSlider.addEventListener('input', e => { state.threshold = parseInt(e.target.value); updateUI() }); thresholdSlider.addEventListener('change', e => { showToast(`📊 Threshold set to ${state.threshold}%`) }); document.getElementById('emergencyBtn').addEventListener('click', () => { if (confirm('⚠️ Emergency Stop?\n\nThis will:\n- Turn OFF pump\n- Disable auto-irrigation')) emergencyStop() }); document.querySelectorAll('.time-btn').forEach(btn => { btn.addEventListener('click', () => { currentTimeRange = btn.dataset.range; document.querySelectorAll('.time-btn').forEach(b => b.classList.remove('active')); btn.classList.add('active'); updateHistoryChart() }) }) } function togglePump() { state.pumpStatus = !state.pumpStatus; if (state.pumpStatus) { state.lastWatering = Date.now(); addEvent('💦 Manual watering started'); showToast('💧 Pump ON') } else { addEvent('🛑 Manual watering stopped'); showToast('⏸️ Pump OFF') } updateUI() } function emergencyStop() { state.pumpStatus = !1; state.autoMode = !1; addEvent('🛑 EMERGENCY STOP activated'); showToast('🚨 EMERGENCY STOP!', 'danger'); updateUI() } function updateUI() { updateGauge(state.soilMoisture, state.threshold); document.getElementById('soilValue').textContent = formatNumber(state.soilMoisture); document.getElementById('thresholdDisplay').textContent = Math.round(state.threshold) + '%'; document.getElementById('tempValue').textContent = formatNumber(state.temperature); document.getElementById('humidityValue').textContent = formatNumber(state.humidity); const pumpIndicator = document.getElementById('pumpIndicator'), pumpStatusText = document.getElementById('pumpStatusText'); pumpIndicator.classList.toggle('on', state.pumpStatus); pumpStatusText.textContent = state.pumpStatus ? 'ON' : 'OFF'; pumpStatusText.style.color = state.pumpStatus ? 'var(--color-success)' : 'var(--color-text-dim)'; document.getElementById('tankFill').style.height = state.waterLevel + '%'; document.getElementById('tankValue').textContent = formatNumber(state.waterLevel) + '% left'; document.getElementById('autoStatus').textContent = state.autoMode ? 'ON' : 'OFF'; document.getElementById('autoStatus').style.color = state.autoMode ? 'var(--color-success)' : 'var(--color-text-dim)'; if (state.lastWatering) { const ago = Math.floor((Date.now() - state.lastWatering) / 6e4); document.getElementById('lastWatering').textContent = ago < 1 ? 'Just now' : ago + 'm ago' } document.getElementById('autoToggle').checked = state.autoMode; document.getElementById('thresholdSlider').value = state.threshold; document.getElementById('sliderValue').textContent = Math.round(state.threshold) + '%'; updateStatusRatings() } function updateStatusRatings() { const soilStatus = getSoilMoistureStatus(state.soilMoisture, state.threshold); document.getElementById('soilStatus').textContent = soilStatus.label; document.getElementById('soilStatus').className = 'status-badge status-large status-' + soilStatus.class; const tempStatus = getTemperatureStatus(state.temperature); document.getElementById('tempStatus').textContent = tempStatus.label; document.getElementById('tempStatus').className = 'status-badge status-' + tempStatus.class; const humidityStatus = getHumidityStatus(state.humidity); document.getElementById('humidityStatus').textContent = humidityStatus.label; document.getElementById('humidityStatus').className = 'status-badge status-' + humidityStatus.class; const waterStatus = getWaterLevelStatus(state.waterLevel); document.getElementById('waterStatus').textContent = waterStatus.label; document.getElementById('waterStatus').className = 'status-badge status-' + waterStatus.class } function getSoilMoistureStatus(m, t) { if (m >= t + 20) return { label: 'Excellent', class: 'excellent' }; if (m >= t + 10) return { label: 'Healthy', class: 'healthy' }; if (m >= t) return { label: 'Good', class: 'good' }; if (m >= t - 10) return { label: 'Low', class: 'low' }; return { label: 'Dry', class: 'dry' } } function getTemperatureStatus(t) { if (t >= 22 && t <= 28) return { label: 'Ideal', class: 'ideal' }; if (t >= 18 && t <= 32) return { label: 'Good', class: 'good' }; if (t < 18) return { label: 'Cold', class: 'cold' }; if (t > 35) return { label: 'Hot', class: 'hot' }; return { label: 'Warm', class: 'normal' } } function getHumidityStatus(h) { if (h >= 60 && h <= 80) return { label: 'Ideal', class: 'ideal' }; if (h >= 50 && h <= 85) return { label: 'Good', class: 'good' }; if (h < 40) return { label: 'Dry', class: 'dry' }; if (h > 90) return { label: 'Humid', class: 'humid' }; return { label: 'Normal', class: 'normal' } } function getWaterLevelStatus(l) { if (l >= 80) return { label: 'Excellent', class: 'excellent' }; if (l >= 60) return { label: 'Good', class: 'good' }; if (l >= 40) return { label: 'Normal', class: 'normal' }; if (l >= 20) return { label: 'Low', class: 'low' }; return { label: 'Critical', class: 'critical' } } function updateGauge(value, threshold) { const gauge = document.getElementById('soilGauge'), gaugeValue = document.getElementById('soilValue'), percentage = Math.min(100, Math.max(0, value)), circumference = 502, offset = circumference - (percentage / 100) * circumference; gauge.style.strokeDashoffset = offset; if (value < threshold) { gauge.style.stroke = '#FF4444'; gaugeValue.style.color = '#FF4444' } else if (value < threshold + 10) { gauge.style.stroke = '#FFA500'; gaugeValue.style.color = '#FFA500' } else { gauge.style.stroke = 'var(--color-primary)'; gaugeValue.style.color = 'var(--color-primary)' } } function updateSystemInfo() { const wifiSignal = document.getElementById('wifiSignal'), bars = wifiSignal.querySelectorAll('.bar'), signalLevel = Math.ceil(state.wifiSignal / 25); bars.forEach((bar, index) => { bar.style.background = index < signalLevel ? 'var(--color-primary)' : 'var(--color-text-dark)' }); document.getElementById('wifiStatus').textContent = state.connected ? 'Connected' : 'Offline'; document.getElementById('wifiStatus').style.color = state.connected ? 'var(--color-success)' : '#FFA500'; state.uptime++; const days = Math.floor(state.uptime / 86400), hours = Math.floor((state.uptime % 86400) / 3600), minutes = Math.floor((state.uptime % 3600) / 60); document.getElementById('uptime').textContent = `${days}d ${hours}h ${minutes}m`; document.getElementById('ipAddress').textContent = ESP32_IP } function loadHistoryView() { const titles = { soil: '🌱 Soil Moisture History', temperature: '🌡️ Temperature History', humidity: '💧 Humidity History', waterLevel: '🚰 Water Level History' }; document.getElementById('historyTitle').textContent = titles[currentHistoryType] || 'History'; updateHistoryChart(); updateHistoryStats(); updateEventsList() } function updateHistoryChart() { const canvas = document.getElementById('historyChart'), ctx = canvas.getContext('2d'), data = getHistoryData(currentHistoryType, currentTimeRange); if (chart) chart.destroy(); const config = { soil: { label: 'Soil Moisture (%)', color: '#9ACD32', unit: '%' }, temperature: { label: 'Temperature (°C)', color: '#FF6B6B', unit: '°C' }, humidity: { label: 'Humidity (%)', color: '#4ECDC4', unit: '%' }, waterLevel: { label: 'Water Level (%)', color: '#45B7D1', unit: '%' } }; const chartConfig = config[currentHistoryType]; chart = new Chart(ctx, { type: 'line', data: { labels: data.labels, datasets: [{ label: chartConfig.label, data: data.values, borderColor: chartConfig.color, backgroundColor: chartConfig.color + '20', borderWidth: 3, fill: !0, tension: .4 }] }, options: { responsive: !0, maintainAspectRatio: !1, plugins: { legend: { labels: { color: '#FFFFFF', font: { size: 12, weight: 'bold' } } } }, scales: { x: { grid: { color: 'rgba(255,255,255,0.1)' }, ticks: { color: '#999999', font: { size: 10 } } }, y: { grid: { color: 'rgba(255,255,255,0.1)' }, ticks: { color: '#999999', font: { size: 10 }, callback: value => value + chartConfig.unit } } } } }) } function getHistoryData(type, range) { const dataPoints = history[type] || [], now = Date.now(), ranges = { '1h': 36e5, '6h': 216e5, '24h': 864e5, '7d': 6048e5 }, rangeMs = ranges[range] || ranges['1h'], cutoff = now - rangeMs, filtered = dataPoints.filter(d => d.time >= cutoff), labels = filtered.map(d => { const date = new Date(d.time); return range === '1h' || range === '6h' ? date.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }) : date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) }), values = filtered.map(d => d.value); return { labels, values } } function updateHistoryStats() { const data = history[currentHistoryType] || [], values = data.map(d => d.value); if (values.length === 0) { document.getElementById('statAverage').textContent = '--'; document.getElementById('statMax').textContent = '--'; document.getElementById('statMin').textContent = '--'; document.getElementById('statCount').textContent = '0'; return } const avg = (values.reduce((a, b) => a + b, 0) / values.length).toFixed(1), max = Math.max(...values).toFixed(1), min = Math.min(...values).toFixed(1), units = { soil: '%', temperature: '°C', humidity: '%', waterLevel: '%' }, unit = units[currentHistoryType] || ''; document.getElementById('statAverage').textContent = avg + unit; document.getElementById('statMax').textContent = max + unit; document.getElementById('statMin').textContent = min + unit; document.getElementById('statCount').textContent = values.length } function updateEventsList() { const eventsList = document.getElementById('eventsList'), recentEvents = history.events.slice(-10).reverse(); if (recentEvents.length === 0) { eventsList.innerHTML = '<p style="text-align:center;color:#999">No events recorded yet</p>'; return } eventsList.innerHTML = recentEvents.map(event => { const time = new Date(event.time).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }); return `<div class="event-item"><span class="event-text">${event.message}</span><span class="event-time">${time}</span></div>` }).join('') } function addEvent(message) { history.events.push({ time: Date.now(), message: message }); if (history.events.length > 100) history.events.shift() } function startDataCollection() { setInterval(() => { addHistoryPoint('soil', state.soilMoisture); addHistoryPoint('temperature', state.temperature); addHistoryPoint('humidity', state.humidity); addHistoryPoint('waterLevel', state.waterLevel); if (currentView === 'historyView') { updateHistoryChart(); updateHistoryStats() } }, 1e4) } function addHistoryPoint(type, value) { if (!history[type]) history[type] = []; history[type].push({ time: Date.now(), value: value }); if (history[type].length > 1e3) history[type].shift() } function initializeWebSocket() { showLoading(!0); const loadingTimeout = setTimeout(() => { showLoading(!1); showToast('📱 Running in Demo Mode', 'info') }, 3e3); try { websocket = new WebSocket(`ws://${ESP32_IP}:81`); websocket.onopen = () => { console.log('✅ WebSocket connected'); clearTimeout(loadingTimeout); state.connected = !0; showLoading(!1); showToast('🌐 Connected to SOIL MATES', 'success') }; websocket.onmessage = event => { try { const data = JSON.parse(event.data); updateStateFromServer(data) } catch (error) { console.error('Parse error:', error) } }; websocket.onerror = error => { console.error('WebSocket error:', error); clearTimeout(loadingTimeout); showLoading(!1) }; websocket.onclose = () => { console.log('❌ WebSocket disconnected'); clearTimeout(loadingTimeout); state.connected = !1; showLoading(!1) } } catch (error) { console.error('WebSocket init failed:', error); clearTimeout(loadingTimeout); showLoading(!1); showToast('📱 Demo Mode Active', 'info') } } function updateStateFromServer(data) { state.soilMoisture = data.soilMoisture || state.soilMoisture; state.temperature = data.temperature || state.temperature; state.humidity = data.humidity || state.humidity; state.waterLevel = data.waterLevel || state.waterLevel; state.pumpStatus = data.pumpStatus !== undefined ? data.pumpStatus : state.pumpStatus; state.autoMode = data.autoMode !== undefined ? data.autoMode : state.autoMode; state.threshold = data.threshold || state.threshold; state.wifiSignal = data.wifiSignal || state.wifiSignal; if (data.lastWatering && data.lastWatering > 0) state.lastWatering = data.lastWatering * 1e3; state.lastUpdate = Date.now(); updateUI() } function showToast(message, type = 'info') { const toast = document.getElementById('toast'), toastMessage = document.getElementById('toastMessage'), toastIcon = toast.querySelector('.toast-icon'), icons = { info: 'ℹ️', success: '✅', warning: '⚠️', danger: '🚨' }; toastIcon.textContent = icons[type] || icons.info; toastMessage.textContent = message; toast.classList.add('show'); setTimeout(() => toast.classList.remove('show'), 3e3) } function showLoading(show) { document.getElementById('loadingOverlay').classList.toggle('show', show) } function startDemoMode() { console.log('🎮 Demo mode active'); setInterval(() => { state.soilMoisture += (Math.random() - .5) * 2; state.soilMoisture = Math.max(0, Math.min(100, state.soilMoisture)); state.temperature += (Math.random() - .5) * .5; state.temperature = Math.max(20, Math.min(40, state.temperature)); state.humidity += (Math.random() - .5) * 2; state.humidity = Math.max(40, Math.min(90, state.humidity)); state.waterLevel += (Math.random() - .5) * 1; state.waterLevel = Math.max(0, Math.min(100, state.waterLevel)); if (state.autoMode && state.soilMoisture < state.threshold && !state.pumpStatus && state.waterLevel > 20) { state.pumpStatus = !0; state.lastWatering = Date.now(); addEvent('🤖 Auto-irrigation started'); setTimeout(() => { state.pumpStatus = !1; addEvent('✅ Auto-irrigation completed'); updateUI() }, 1e4) } updateUI() }, 2e3); state.wifiSignal = 85; state.connected = !0 } function formatNumber(value) { if (value % 1 === 0) return Math.round(value).toString(); if (Math.abs(value - Math.floor(value)) < .1) return value.toFixed(2); return value.toFixed(1) } window.switchView = switchView;
+
+        // Register Service Worker for PWA
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('service-worker.js')
+                    .then(reg => console.log('✅ Service Worker registered:', reg.scope))
+                    .catch(err => console.log('⚠️ Service Worker registration failed:', err));
+            });
+        }
+    </script>
+</body>
+
+</html>
